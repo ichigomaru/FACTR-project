@@ -15,9 +15,9 @@ _Carnegie Mellon University_
 
 ## Catalog
 - [Environment](#environment)
-- [Dataset](#dataset)
-- [Training and Testing](#training-and-testing)
-- [Acknowledgements](#acknowledgements)
+- [Data Collection and Processing](#data-collection-and-processing)
+- [Training and Testing](#training)
+- [Policy Rollout](#policy-rollout)
 - [Citation](#citation)
   
 ## Environment
