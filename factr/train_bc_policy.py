@@ -21,9 +21,7 @@ from pathlib import Path
 base_path = os.path.dirname(os.path.abspath(__file__))
 
 
-@hydra.main(
-    config_path=os.path.join(base_path, "cfg"), config_name="train_bc.yaml"
-)
+@hydra.main(config_path="cfg", config_name="train_bc.yaml")
 def train_bc(cfg: DictConfig):
     try:
         resume_model = misc.init_job(cfg)

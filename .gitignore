@@ -9,13 +9,8 @@ __pycache__/
 
 # misc
 .vscode
-*.pyc
-*.iml
-*.swp
-.project
-.pydevproject
 .DS_Store
-.idea
+outputs/
 
 # data & checkpoints
 visual_features/

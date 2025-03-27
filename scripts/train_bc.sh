@@ -8,7 +8,7 @@ CUDA_DEVICE_ID=0
 task_config=single_franka
 
 # path to dataset buffer
-buffer_path=$(pwd)/processed_data/pivot/abs-joint/buf.pkl
+buffer_path=$(pwd)/processed_data/test/buf.pkl
 
 # curriculum parameters
 space_config=pixel # pixel, latent
@@ -23,7 +23,7 @@ feature_path=$(pwd)/visual_features/vit_base/SOUP_1M_DH.pth
 # wandb
 wandb_entity=YOUR_WANDB
 
-CUDA_VISIBLE_DEVICES=$CUDA_DEVICE_ID python train_bc_policy.py \
+CUDA_VISIBLE_DEVICES=$CUDA_DEVICE_ID python factr/train_bc_policy.py \
 agent.features.restore_path=$feature_path \
 buffer_path=$buffer_path \
 task=$task_config \
