@@ -54,7 +54,7 @@ trajectory.pkl
   - Keys are the same data source names as in the "data" dictionary
   - Values are lists containing the timestamps when each corresponding data point was recorded
 
-*Note*: Different data sources may log at different frequencies, resulting in varying list lengths across topics. The timestamps are crucial for properly aligning and post-processing the data.
+*Note*: Different data sources may log at different frequencies, resulting in varying list lengths across data sources. The timestamps are crucial for properly aligning and post-processing the data.
 While ROS provides synchronization APIs, we chose to record raw timestamps and perform post-processing to allow for greater flexibility in data analysis and alignment.
 ```python
 # Example of a trajectory structure
@@ -76,7 +76,8 @@ If the data is in the aforementioned format, we provide sample scripts to proces
 ```bash
 python process_data/process_data.py
 ```
-Please checkout the [config file](process_data/cfg/default.yaml) for details about configurations.
+Please checkout the [config file](process_data/cfg/default.yaml) for details about configurations.Besides the robobuf (a pickle file), the data processing file also produces a *rollout_config.yaml*, which specifies necessary information--such as normalization and data dimensions--to rollout the policy in the realworld.
+
 
 ## Training
 
@@ -86,9 +87,9 @@ To train a BC policy, the following script gives an example of the script and co
 bash scripts/train_bc.sh
 ```
 There are several important configs to set up to train your own policy:
-- setup a task configuration file under [cfg/task](cfg/task) which specifies the observation dimensions, action dimensions, and camera indices for visual inputs
-- path to the dataset
-- the curriculum parameteters
+- A task configuration file under [cfg/task](cfg/task) which specifies the observation dimensions, action dimensions, and camera indices for visual inputs
+- The path to the dataset (a pickle file in the robobuf format)
+- The curriculum parameteters
 
 ## Policy Rollout
 We provide instructions and sample policy rollout scripts in ROS2 at [factr_teleop](insert_link). Again, you might need your custom nodes for robots and sensors to run the system.
