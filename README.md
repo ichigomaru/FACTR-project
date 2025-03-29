@@ -16,8 +16,9 @@ _Carnegie Mellon University_
 ## Catalog
 - [Environment](#environment)
 - [Data Collection and Processing](#data-collection-and-processing)
-- [Training and Testing](#training)
+- [Training](#training)
 - [Policy Rollout](#policy-rollout)
+- [License and Acknowledgements](#license-and-acknowledgements)
 - [Citation](#citation)
   
 ## Environment
@@ -93,6 +94,12 @@ There are several important configs to set up to train your own policy:
 
 ## Policy Rollout
 We provide instructions and sample policy rollout scripts in ROS2 at [factr_teleop](https://github.com/RaindragonD/factr_teleop/). Again, you might need your custom nodes for robots and sensors to run the system.
+
+## License and Acknowledgements
+This source code is licensed under the Apache 2.0 liscence found in the LICENSE file in the root directory of this repository.
+
+This project builds on top of or utilizes the following third party dependencies.
+- [data4robotics](https://github.com/SudeepDasari/data4robotics)
 
 ## Citation
 If you find this codebase useful, feel free to cite our work!

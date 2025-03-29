@@ -1,12 +1,26 @@
-import torch
-import torch.nn.functional as F
-import matplotlib.pyplot as plt
-import imageio.v3 as iio
+# ---------------------------------------------------------------------------
+# FACTR: Force-Attending Curriculum Training for Contact-Rich Policy Learning
+# https://arxiv.org/abs/2502.17432
+# Copyright (c) 2025 Jason Jingzhou Liu and Yulong Li
 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ---------------------------------------------------------------------------
+
+
+import math
+import numpy as np
 import torch
 import torch.nn.functional as F
-from math import ceil
-import numpy as np
 
 def gaussian_2d_kernel(kernel_size: int, sigma: float, device=None, dtype=None) -> torch.Tensor:
     """
@@ -35,8 +49,7 @@ def gaussian_2d_smoothing(
     
     Args:
         img: Tensor of shape (..., C, H, W).
-        scale: Controls the standard deviation (sigma) of the Gaussian kernel.
-               Larger => more smoothing.
+        scale: Controls the standard deviation (sigma) of the Gaussian kernel. Larger scale corresponds to more smoothing.
 
     Returns:
         blurred: Tensor of the same shape as img.
@@ -45,7 +58,7 @@ def gaussian_2d_smoothing(
         return img
 
     sigma = scale
-    kernel_size = max(3, 2 * ceil(3 * sigma) + 1)
+    kernel_size = max(3, 2 * math.ceil(3 * sigma) + 1)
 
     kernel_2d = gaussian_2d_kernel(kernel_size, sigma, device=img.device, dtype=img.dtype)
     kernel_2d = kernel_2d.view(1, 1, kernel_size, kernel_size)
@@ -71,8 +84,7 @@ def gaussian_1d_smoothing(x: torch.Tensor, scale: float = 1.0) -> torch.Tensor:
     
     Args:
         x: Tensor of shape (..., feature_dim).
-        scale: Controls the standard deviation (sigma) of the Gaussian kernel.
-            Larger scale => smoother (more blurring).
+        scale: Controls the standard deviation (sigma) of the Gaussian kernel. Larger scale corresponds to more smoothing.
     
     Returns:
         smoothed_x: Tensor of the same shape as x, but blurred along the last dimension.

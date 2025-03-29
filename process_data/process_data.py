@@ -1,11 +1,28 @@
+# ---------------------------------------------------------------------------
+# FACTR: Force-Attending Curriculum Training for Contact-Rich Policy Learning
+# https://arxiv.org/abs/2502.17432
+# Copyright (c) 2025 Jason Jingzhou Liu and Yulong Li
 
-import pickle as pkl
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ---------------------------------------------------------------------------
+
+
+import yaml
+import hydra
+import pickle
 import numpy as np
 from tqdm import tqdm
 from pathlib import Path
-import pickle
-import yaml
-import hydra
 from omegaconf import DictConfig
 
 from utils_data_process import sync_data_slowest, process_image, gaussian_norm, generate_robobuf
@@ -41,7 +58,7 @@ def main(cfg: DictConfig):
     pbar = tqdm(all_episodes)
     for episode_pkl in pbar:
         with open(episode_pkl, 'rb') as f:
-            traj_data = pkl.load(f)
+            traj_data = pickle.load(f)
         traj_data, avg_freq = sync_data_slowest(traj_data, all_topics)
         pbar.set_postfix({'avg_freq': f'{avg_freq:.1f} Hz'})
 
@@ -73,7 +90,7 @@ def main(cfg: DictConfig):
     buffer_name = "buf"
     buffer = generate_robobuf(trajectories)
     with open(output_dir / f"{buffer_name}.pkl", "wb") as f:
-        pkl.dump(buffer.to_traj_list(), f)
+        pickle.dump(buffer.to_traj_list(), f)
     
     # dump rollout config
     obs_config = {
