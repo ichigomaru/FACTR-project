@@ -6,7 +6,7 @@
 #### [Jason Jingzhou Liu](https://jasonjzliu.com)<sup>\*</sup>, [Yulong Li](https://yulongli42.github.io)<sup>\*</sup>, [Kenneth Shaw](https://kennyshaw.net), [Tony Tao](https://tony-tao.com), [Ruslan Salakhutdinov](https://www.cs.cmu.edu/~rsalakhu/), [Deepak Pathak](https://www.cs.cmu.edu/~dpathak/)
 _Carnegie Mellon University_
 
-[Project Page](https://jasonjzliu.com/factr/) | [arXiV](https://arxiv.org/abs/2502.17432)
+[Project Page](https://jasonjzliu.com/factr/) | [arXiV](https://arxiv.org/abs/2502.17432) | [FACTR Teleop](https://github.com/RaindragonD/factr_teleop/)
 
 <h1> </h1>
 <img src="assets/main_teaser.jpg" alt="teaser" width="750"/>
@@ -25,12 +25,12 @@ _Carnegie Mellon University_
 conda env create -f env.yaml
 conda activate factr
 ```
-We make use of the pretrained features from [data4robotics](https://github.com/SudeepDasari/data4robotics) project. Download the pretrained features as follows:
+We make use of the pretrained weights for visual encoders from [data4robotics](https://github.com/SudeepDasari/data4robotics) project. Download the pretrained features as follows:
 ```bash
 bash scripts/download_features.sh
 ```
 ## Data Collection and Processing
-We provide instructions and sample data collection scripts in ROS2 at [factr_teleop](insert_link). You might need your custom nodes for robots and sensors to run the system. In our case, the collected data is saved in following format:
+We provide instructions and sample data collection scripts in ROS2 at [factr_teleop](https://github.com/RaindragonD/factr_teleop/). You might need your custom nodes for robots and sensors to run the system. In our case, the collected data is saved in following format:
 ### Data Structure
 Each trajectory is saved as a separate pickle file. Each pickle file contains a dictionary with the following structure:
 ```
@@ -92,7 +92,7 @@ There are several important configs to set up to train your own policy:
 - The curriculum parameteters
 
 ## Policy Rollout
-We provide instructions and sample policy rollout scripts in ROS2 at [factr_teleop](insert_link). Again, you might need your custom nodes for robots and sensors to run the system.
+We provide instructions and sample policy rollout scripts in ROS2 at [factr_teleop](https://github.com/RaindragonD/factr_teleop/). Again, you might need your custom nodes for robots and sensors to run the system.
 
 ## Citation
 If you find this codebase useful, feel free to cite our work!
