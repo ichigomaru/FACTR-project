@@ -69,6 +69,7 @@ def get_diff_timestamps(timestamps):
 def sync_data_slowest(traj_data, all_topics):
     timestamps = traj_data["timestamps"]
     for topic in all_topics:
+        assert topic in timestamps, f"Topic {topic} not found in recorded data"
         timestamps[topic] = np.array(timestamps[topic])
     data = traj_data["data"]
     synced_data = {topic: [] for topic in all_topics}

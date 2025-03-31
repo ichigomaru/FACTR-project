@@ -136,7 +136,7 @@ class RobobufReplayBuffer(ReplayBuffer):
         self,
         buffer_path,
         transform=None,
-        n_test_trans=500,
+        n_test_ratio=0.05,
         mode="train",
         ac_chunk=1,
         cam_indexes=[0],
@@ -147,7 +147,7 @@ class RobobufReplayBuffer(ReplayBuffer):
         assert mode in ("train", "test"), "Mode must be train/test"
         buf = _cached_load(buffer_path)
         
-        assert len(buf) > n_test_trans, "Not enough transitions!"
+        n_test_trans = int(len(buf) * n_test_ratio)
 
         norm_file = os.path.join(os.path.dirname(buffer_path), "ac_norm.json")
         if os.path.exists(norm_file):
