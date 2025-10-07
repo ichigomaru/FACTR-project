@@ -206,7 +206,8 @@ class _ACT(nn.Module):
         input_pos = self.pos_helper(input_tokens)
         memory = self.encoder(input_tokens, input_pos)
 
-        query_enc = query_enc[:, None].repeat((1, input_tokens.shape[1], 1))
+        # query_encが外部から与えられるようにする
+        # query_enc = query_enc[:, None].repeat((1, input_tokens.shape[1], 1)) # 元のコードの一部は呼び出し元へ
         tgt = torch.zeros_like(query_enc)
         acs_tokens = self.decoder(tgt, memory, input_pos, query_enc)
         return acs_tokens.transpose(0, 1)
@@ -264,8 +265,21 @@ class TransformerAgent(BaseAgent):
         return l1
 
     def get_actions(self, imgs, obs):
+        # 1. diffusionで目標カテゴリを決定
+        goal_category = self.diffusion_model.sample(condition=force_sensor_data)
+
+        # 2. カテゴリをゴール表現ベクトルに変換
+        goal_vector = self.goal_embedding(goal_category) # [batch_size, 1, d_model]
+
+        # 3. Transformerのクエリとしてゴール表現ベクトルを使用
         tokens = self.tokenize_obs(imgs, obs)
-        action_tokens = self.transformer(tokens, self.ac_query.weight)
+
+        # 外部から与えたゴールベクトルをクエリとして渡す
+        # バッチサイズに合わせて形状を整える
+        query_input = goal_vector.repeat((1, self.ac_chunk, 1)) # ac_chunkの数だけクエリを繰り返す
+        query_input = query_input.transpose(0,1) # decoderの入力形式に合わせる
+
+        action_tokens = self.transformer(tokens, query_input)
         return self.ac_proj(action_tokens)
 
     @property
