@@ -15,6 +15,10 @@ import torch.nn.functional as F
 
 from factr.agent import BaseAgent
 
+from lerobot.common.policies.diffusion.modeling_diffusion import DiffusionPolicy
+from lerobot.common.policies.diffusion.configuration_diffusion import DiffusionPolicyConfig
+from diffusers.schedulers.scheduling_ddpm import DDPMScheduler
+
 
 def _get_clones(module, N):
     return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
@@ -258,30 +262,58 @@ class TransformerAgent(BaseAgent):
         self.encoder = original_transuformer.encoder
 
         #Lerobotのdiffusion
-        self.diffusion_policy = DiffusionPolicy()
+        self.diffusion_policy = DiffusionPolicy(
+            action_dim=ac_dim,
+            action_chunks=ac_chunk,
+            transformer_encoder=self.encoder,
+            d_model=self.transformer.d_model,
+            nhead=self.transformer.nhead,
+        )
 
         self.classification_head = nn.Sequential(
-            nn.Linear(self._ac_chunk * self._ac_dim, 128),
+            # 入力: 軌道ベクトル (ac_chunk * ac_dim)
+            # 例: 16ステップ * 7次元アクション = 112次元
+            nn.Linear(self._ac_chunk * self._ac_dim, 256),
             nn.ReLU(),
-            nn.Linear(128, 4) # 前後左右の4クラス
-)
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Linear(128, 4) # 出力: 4クラス（前後左右）
+        )
 
     #学習時
-    def forward(self, imgs, obs, ac_flat, mask_flat):
+    def forward(self, imgs, obs, ac_flat, direction_labels):
         tokens = self.tokenize_obs(imgs, obs)
-        action_tokens = self.transformer(tokens, self.ac_query.weight)
-        actions = self.ac_proj(action_tokens)
+        memory = self.encoder(tokens.transpose(0, 1), pos=None).transpose(0, 1)
+        obs_cond = memory.mean(dim=1) 
 
-        ac_flat_hat = actions.reshape((actions.shape[0], -1))
-        all_l1 = F.l1_loss(ac_flat_hat, ac_flat, reduction="none")
-        l1 = (all_l1 * mask_flat).mean()
-        return l1
+        #diffuisionのloss計算
+        diffusion_loss = self.diffusion_policy.compute_loss(obs_cond, ac_flat)
+
+        #方向分類のloss計算
+        predicted_logits = self.classification_head(ac_flat.flatten(start_dim=1))
+        classification_loss = F.cross_entropy(predicted_logits, direction_labels)
+
+        total_loss = diffusion_loss + classification_loss
+        return total_loss
 
     #実行時
     def get_actions(self, imgs, obs):
         tokens = self.tokenize_obs(imgs, obs)
-        action_tokens = self.transformer(tokens, self.ac_query.weight)
-        return self.ac_proj(action_tokens)
+        memory = self.encoder(tokens.transpose(0, 1), pos=None).transpose(0, 1)
+        obs_cond = memory.mean(dim=1)
+
+        #デノイズして軌道生成
+        predicted_actions = self.diffusion_policy.generate_action(
+            obs_cond, 
+            num_inference_steps=10 #デノイズステップ数
+        )
+
+        #４方向の確率計算
+        #classification_headは後で定義
+        flat_actions = predicted_actions.flatten(start_dim=1)
+        action_probabilities_logits = self.classification_head(flat_actions)
+        
+        return predicted_actions, F.softmax(action_probabilities_logits, dim=-1)
 
     @property
     def ac_chunk(self):
