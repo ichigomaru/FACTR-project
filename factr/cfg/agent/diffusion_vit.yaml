@@ -1,0 +1,26 @@
+# factr/cfg/agent/diffusion_vit.yaml
+
+defaults:
+  - features: vit_base
+  - _self_
+
+# _target_で新しいクラスを指定
+_target_: factr.models.diffusion_agent.DiffusionAgent
+
+odim: ${task.obs_dim}
+n_cams: ${task.n_cams}
+ac_dim: ${task.ac_dim}
+ac_chunk: ${ac_chunk} # Diffusionの予測ホライズン
+
+# FACTRエンコーダ用の設定 (transformer_vit.yamlから流用)
+transformer_kwargs:
+  d_model: 512
+  dropout: 0.1
+  nhead: 8
+  num_encoder_layers: 4
+  # ... (デコーダの設定は不要) ...
+
+# LeRobot Policy用の設定を追加
+diffusion_kwargs:
+  model_name: "ConditionalUnet1D"
+  # ... LeRobotが必要とするその他のパラメータ ...

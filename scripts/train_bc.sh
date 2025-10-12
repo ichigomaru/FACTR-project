@@ -24,6 +24,7 @@ feature_path=$(pwd)/visual_features/vit_base/SOUP_1M_DH.pth
 wandb_entity=YOUR_WANDB
 
 CUDA_VISIBLE_DEVICES=$CUDA_DEVICE_ID python factr/train_bc_policy.py \
+agent=diffusion_vit
 agent.features.restore_path=$feature_path \
 buffer_path=$buffer_path \
 task=$task_config \

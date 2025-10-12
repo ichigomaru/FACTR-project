@@ -212,6 +212,7 @@ class _ACT(nn.Module):
         return acs_tokens.transpose(0, 1)
 
 
+#diffusion入れる対象
 class TransformerAgent(BaseAgent):
     def __init__(
         self,
@@ -252,7 +253,20 @@ class TransformerAgent(BaseAgent):
         self.ac_query = nn.Embedding(ac_chunk, self.transformer.d_model)
         self.ac_proj = nn.Linear(self.transformer.d_model, ac_dim)
         self._ac_dim, self._ac_chunk = ac_dim, ac_chunk
+        
+        original_transuformer = _ACT(**transformer_kwargs)
+        self.encoder = original_transuformer.encoder
 
+        #Lerobotのdiffusion
+        self.diffusion_policy = DiffusionPolicy()
+
+        self.classification_head = nn.Sequential(
+            nn.Linear(self._ac_chunk * self._ac_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, 4) # 前後左右の4クラス
+)
+
+    #学習時
     def forward(self, imgs, obs, ac_flat, mask_flat):
         tokens = self.tokenize_obs(imgs, obs)
         action_tokens = self.transformer(tokens, self.ac_query.weight)
@@ -263,6 +277,7 @@ class TransformerAgent(BaseAgent):
         l1 = (all_l1 * mask_flat).mean()
         return l1
 
+    #実行時
     def get_actions(self, imgs, obs):
         tokens = self.tokenize_obs(imgs, obs)
         action_tokens = self.transformer(tokens, self.ac_query.weight)
