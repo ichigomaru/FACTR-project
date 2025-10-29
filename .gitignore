@@ -2,6 +2,7 @@
 build
 install
 log
+Miniconda3-latest-Linux-x86_64.sh
 
 # python
 __pycache__/

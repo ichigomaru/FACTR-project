@@ -16,25 +16,25 @@ hydra:
 
 rt: ${hydra:runtime.choices.agent/features}
 
-exp_name: test
-batch_size: 128
-num_workers: 10
+exp_name: test_1028
+batch_size: 10 #モデルが一度に処理する**データの数（バッチサイズ）**です。学習の1ステップ（イテレーション）ごとに、データセットから10個のサンプルを取り出してきて、まとめてモデルに入力し、重みを更新
+num_workers: 4 #データセットからデータを読み込む際に、並列で動かすプロセス（ワーカー）の数
 lr: 0.0003
 max_iterations: 20000
-eval_freq: 200
-save_freq: 2000
+eval_freq: 200 #評価の頻度 (Evaluation Frequency) です。200回の学習ステップごとに、現在のモデルの性能をテストデータセットで評価
+save_freq: 2000 #チェックポイント保存の頻度 (Save Frequency) です。2000回の学習ステップごとに、その時点でのモデルの重みをファイルに保存
 schedule_freq: 1
 devices: 1
 seed: 42
 
 buffer_path: ./buffer.pkl
-ac_chunk: 100
+ac_chunk: 25 #100
 img_chunk: 1  # number of image timesteps to use (including current one)
 train_transform: medium
 test_transform: preproc
 
 curriculum:
-  space: pixel # pixel, latent
+  space: latent # pixel, latent
   operator: blur # blur, downsample
   scheduler: linear # no, const, linear, step, exp, cos
   start_scale: 5
@@ -45,5 +45,7 @@ wandb:
   name: ${exp_name}
   project: factr
   group: bc
-  debug: True
-  entity: WANDB_ENTITY
+  debug: False #Falseに
+  entity: None
+
+  #a-otake2415-keio-university-global-page-org

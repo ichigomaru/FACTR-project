@@ -1,12 +1,21 @@
 
-input_path: ../factr_teleop/raw_data/test
-output_path: processed_data/test
+input_path: /data/otake/20251024
+output_path: processed_data/test_1028
+
+# cameras_topics:
+# - /zed/front/im_left
+# obs_topics:
+# - /franka/right/obs_franka_torque
+# - /gripper/right/obs_gripper_pos
+# action_config:
+#   /factr_teleop/right/cmd_franka_pos: 7
+#   /factr_teleop/right/cmd_gripper_pos: 1
+
 
 cameras_topics:
-- /zed/front/im_left
+- /realsense/arm/im
 obs_topics:
-- /franka/right/obs_franka_torque
-- /gripper/right/obs_gripper_pos
+- /franka_robot_state_broadcaster/external_joint_torques #これ単純なトルクでやってた？defaultが違う？外部関節トルクじゃないの？
+# - /gripper/right/obs_gripper_pos
 action_config:
-  /factr_teleop/right/cmd_franka_pos: 7
-  /factr_teleop/right/cmd_gripper_pos: 1
+  /joint_impedance_command_controller/joint_trajectory: 7

@@ -50,31 +50,102 @@ def main(cfg: DictConfig):
     # initialize topics
     all_topics = state_obs_topics + rgb_obs_topics + action_topics
     
-    all_episodes = sorted([f for f in data_folder.iterdir() if f.name.startswith('ep_') and f.name.endswith('.pkl')])
+    all_episodes = sorted([f for f in data_folder.iterdir() if f.name.startswith('data_log_') and f.name.endswith('.pkl')]) #ep_ -> data_log_に変更
     
     trajectories = []
     all_states = []
     all_actions = []
     pbar = tqdm(all_episodes)
     for episode_pkl in pbar:
-        with open(episode_pkl, 'rb') as f:
-            traj_data = pickle.load(f)
+        # === 1. 破損ファイル(EOFError)のチェック ===
+        try:
+            with open(episode_pkl, 'rb') as f:
+                traj_data = pickle.load(f)
+        except EOFError:
+            print(f"\n[エラー] ファイル '{episode_pkl.name}' は空か破損しています (EOFError)。スキップします。")
+            continue  # 次のファイルへ
+        except Exception as e:
+            print(f"\n[エラー] ファイル '{episode_pkl.name}' の読み込みに失敗: {e}。スキップします。")
+            continue  # 次のファイルへ
+
+        # === 2. 中身が空(データ数<=1)でないかチェック ===
+        try:
+            timestamps = traj_data.get("timestamps")
+            if timestamps is None:
+                print(f"\n[警告] ファイル '{episode_pkl.name}' に 'timestamps' キーがありません。スキップします。")
+                continue
+
+            message_counts = [len(timestamps[topic]) for topic in all_topics if topic in timestamps]
+            if not message_counts:
+                print(f"\n[警告] ファイル '{episode_pkl.name}' の 'timestamps' にデータがありません。スキップします。")
+                continue
+
+            min_freq_topic_len = min(message_counts)
+            if min_freq_topic_len <= 1:
+                print(f"\n[警告] ファイル '{episode_pkl.name}' のデータが {min_freq_topic_len} 件しかありません。スキップします。")
+                continue
+        except Exception as e:
+            print(f"\n[エラー] ファイル '{episode_pkl.name}' のデータ検証中に失敗: {e}。スキップします。")
+            continue
+
+        # === 3. (ここに来たファイルは正常) データ処理を実行 ===
         traj_data, avg_freq = sync_data_slowest(traj_data, all_topics)
         pbar.set_postfix({'avg_freq': f'{avg_freq:.1f} Hz'})
 
         traj = {}
         num_steps = len(traj_data[action_topics[0]])
         traj['num_steps'] = num_steps
-        traj['states'] = np.concatenate([np.array(traj_data[topic]) for topic in state_obs_topics], axis=-1)
-        action_list = []
+    # === 1. 状態 (State) の抽出 ===
+        state_list = []
+        for topic in state_obs_topics:
+            try:
+                topic_data_list = traj_data[topic] # 同期済みの辞書のリスト
+                
+                # (修正点) トピック名でチェックせず、'effort' の抽出を試みる
+                extracted_data = np.array([item['effort'] for item in topic_data_list])
+                state_list.append(extracted_data)
+            
+            except (TypeError, KeyError):
+                # 'effort' がない辞書か、辞書でない場合 (例: グリッパー位置が [0.1] のような数値だった場合)
+                print(f"\n[情報] トピック '{topic}' は 'effort' を持たないか辞書ではありません。数値としてそのまま使用します。")
+                state_list.append(np.array(topic_data_list))
+            except Exception as e:
+                print(f"\n[警告] ファイル '{episode_pkl.name}' のトピック '{topic}' 処理中にエラー: {e}。スキップします。")
+                continue # このトピックの処理をスキップ
+
+        if not state_list:
+            print(f"\n[警告] ファイル '{episode_pkl.name}' で state_obs_topics が処理されませんでした。スキップします。")
+            continue
+
+        traj['states'] = np.concatenate(state_list, axis=-1)
+
+        action_list = []  # <-- ★★★ ここで action_list を定義します ★★★
         for topic in action_topics:
-            actions = np.array(traj_data[topic])
+            try:
+                topic_data_list = traj_data[topic] # 同期済みの辞書のリスト
+
+                # (修正点) トピック名でチェックせず、'position' の抽出を試みる
+                actions = np.array([item['position'] for item in topic_data_list])
+            
+            except (TypeError, KeyError):
+                # 'position' がない辞書か、辞書でない場合 (例: グリッパー指令が [0.8] のような数値だった場合)
+                print(f"\n[情報] トピック '{topic}' は 'position' を持たないか辞書ではありません。数値としてそのまま使用します。")
+                actions = np.array(topic_data_list)
+            except Exception as e:
+                print(f"\n[警告] ファイル '{episode_pkl.name}' のトピック '{topic}' 処理中にエラー: {e}。スキップします。")
+                continue # このトピックの処理をスキップ
+                
             action_list.append(actions)
+
+        if not action_list:
+            print(f"\n[警告] ファイル '{episode_pkl.name}' で action_config が処理されませんでした。スキップします。")
+            continue
+
         traj['actions'] = np.concatenate(action_list, axis=-1)
-        
+
         all_states.append(traj['states'])
         all_actions.append(traj["actions"])
-        
+
         for cam_ind, topic in enumerate(rgb_obs_topics):
             enc_images = traj_data[topic]
             processed_images = [process_image(img_enc) for img_enc in enc_images]

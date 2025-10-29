@@ -8,7 +8,7 @@ CUDA_DEVICE_ID=0
 task_config=single_franka
 
 # path to dataset buffer
-buffer_path=$(pwd)/processed_data/test/buf.pkl
+buffer_path=$(pwd)/processed_data/test_1028/buf.pkl
 
 # curriculum parameters
 space_config=pixel # pixel, latent
@@ -21,10 +21,9 @@ stop_scale=0
 feature_path=$(pwd)/visual_features/vit_base/SOUP_1M_DH.pth
 
 # wandb
-wandb_entity=YOUR_WANDB
+wandb_entity=a-otake2415-keio-university-global-page-org
 
 CUDA_VISIBLE_DEVICES=$CUDA_DEVICE_ID python factr/train_bc_policy.py \
-agent=diffusion_vit
 agent.features.restore_path=$feature_path \
 buffer_path=$buffer_path \
 task=$task_config \
@@ -33,4 +32,4 @@ curriculum.operator=$operator_config \
 curriculum.scheduler=$scheduler_config \
 curriculum.start_scale=$start_scale \
 curriculum.stop_scale=$stop_scale \
-wandb.entity=wandb_entity
+wandb.entity=$wandb_entity
